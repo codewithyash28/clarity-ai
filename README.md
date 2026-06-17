@@ -150,42 +150,6 @@ GOV.UK eligibility pages for each of the seven benefits are manually structured 
 
 This produces approximately 28 to 35 chunks total, embedded using Cohere and stored in Supabase pgvector for semantic retrieval.
 
----
-
-## AI Architecture (USAII Submission Answer)
-
-**Input:** Five user answers covering employment status, household situation, housing type, age, and health or disability status.
-
-**AI Processing:** Answers are converted to a natural-language situation summary, embedded using Cohere, and matched against a RAG knowledge base built from GOV.UK public eligibility data. A large language model processes the retrieved rules alongside the user's situation to assess each benefit, assign a confidence level, and generate a plain-language explanation with estimated amounts and claim steps.
-
-**Output:** A prioritized list of qualifying benefits, estimated weekly and monthly amounts, a confidence rating per benefit, plain-language explanations, and a step-by-step claim checklist.
-
----
-
-## Human-in-the-Loop Design (USAII Submission Answer)
-
-Clarity does not determine final eligibility.
-
-The AI identifies which benefits a person likely qualifies for and explains them in plain English. Final eligibility is always confirmed by the official GOV.UK system or a human advisor.
-
-A visible "Verify with GOV.UK" button appears on every result. This is by design, not a disclaimer.
-
-Humans must remain in control because benefits involve legal entitlements, personal financial circumstances the AI cannot fully verify, and real-world consequences that require official confirmation.
-
----
-
-## Responsible AI Guardrail (USAII Submission Answer)
-
-**Risk:** AI may misclassify eligibility for complex cases — overlapping disabilities, non-standard employment, or mixed household situations — causing users to expect benefits they do not qualify for.
-
-**Mitigation:** Every result includes a confidence meter with three levels: HIGH, MEDIUM, and NEEDS REVIEW. Results rated NEEDS REVIEW automatically display the following message:
-
-> *"This result is uncertain. Please verify with an official advisor or GOV.UK before making any financial decisions."*
-
-Low-confidence results are never presented as confirmed eligibility.
-
----
-
 ## Responsible AI — Full Considerations
 
 ### Data Accuracy
@@ -245,28 +209,6 @@ By surfacing eligibility in plain language and routing users to GOV.UK for confi
 ---
 
 ## Project Structure
-
-```
-clarity-eligibility-ai/
-├── app/
-│   ├── page.tsx              # Landing page
-│   ├── assess/
-│   │   └── page.tsx          # 5-question intake flow
-│   └── results/
-│       └── page.tsx          # Benefits results display
-├── api/
-│   └── assess/
-│       └── route.ts          # RAG + LLM pipeline endpoint
-├── data/
-│   └── benefits/             # GOV.UK eligibility JSON chunks
-├── lib/
-│   ├── embed.ts              # Cohere embedding logic
-│   ├── retrieve.ts           # Supabase vector retrieval
-│   └── generate.ts           # Cerebras LLM generation
-└── README.md
-```
-
----
 
 ## Data Sources
 
