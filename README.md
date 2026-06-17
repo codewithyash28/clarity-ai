@@ -1,4 +1,4 @@
-# Clarity — Your Eligibility AI
+# Clarity — Your Eligibility AI (DRAFT)
 
 > A benefits guidance tool powered by AI, built for the people who need it most.
 
