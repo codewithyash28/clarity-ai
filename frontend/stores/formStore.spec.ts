@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { vi } from 'vitest'
 import { createTestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useFormStore } from './formStore'
@@ -15,9 +16,13 @@ import { useFormStore } from './formStore'
 //
 // Requires `@pinia/testing` as a devDependency:
 //   npm install -D @pinia/testing
+//
+// createSpy: vi.fn — newer @pinia/testing versions no longer auto-detect
+// a spy library and throw at construction time if this isn't set, even
+// when stubActions is false.
 
 beforeEach(() => {
-  setActivePinia(createTestingPinia({ stubActions: false }))
+  setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }))
 })
 
 describe('useFormStore — conditional num_children step (STR-004)', () => {
@@ -69,7 +74,7 @@ describe('useFormStore — conditional num_children step (STR-004)', () => {
     noChildren.setAnswer('household_situation', 'single')
     expect(noChildren.totalSteps).toBe(5)
 
-    setActivePinia(createTestingPinia({ stubActions: false }))
+    setActivePinia(createTestingPinia({ stubActions: false, createSpy: vi.fn }))
     const withChildren = useFormStore()
     withChildren.setAnswer('household_situation', 'single_parent')
     expect(withChildren.totalSteps).toBe(6)
