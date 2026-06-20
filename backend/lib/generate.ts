@@ -67,7 +67,19 @@ const claimUrlSchema = z
   .string()
   .min(1)
   .transform((val) => (/^https?:\/\//i.test(val) ? val : `https://${val}`))
-  .pipe(z.string().url());
+  .pipe(z.string().url())
+  .refine(
+    (url) => {
+      try {
+        const parsed = new URL(url);
+        // Must have a reasonable hostname (contain a dot or be localhost)
+        return parsed.hostname.includes('.') || parsed.hostname === 'localhost';
+      } catch {
+        return false;
+      }
+    },
+    { message: 'URL must have a valid domain name' }
+  );
 
 const BenefitResultSchema = z.object({
   name:               z.string().min(1),
