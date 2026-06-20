@@ -22,7 +22,7 @@ const LLM_TEMPERATURE = 0.1;
  * 7 benefits x ~150 tokens each + JSON scaffolding ~ 1,200 tokens.
  * 1,500 provides comfortable headroom without runaway cost.
  */
-const LLM_MAX_TOKENS = parseInt(process.env.LLM_MAX_TOKENS ?? "1500", 10);
+const LLM_MAX_TOKENS = parseInt(process.env.LLM_MAX_TOKENS ?? "3000", 10);
 
 // ─── Output types ────────────────────────────────────────────────────────────
 export interface BenefitResult {
