@@ -1,8 +1,8 @@
 
 
----
 
-```markdown
+
+
 # <p align="center"><img src="https://img.shields.io/badge/Clarity-%E2%9C%A8%20Your%20Eligibility%20AI-00ffff?style=for-the-badge" /></p>
 
 <p align="center">
