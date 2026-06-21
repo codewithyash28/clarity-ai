@@ -6,6 +6,13 @@
 # <p align="center"><img src="https://img.shields.io/badge/Clarity-%E2%9C%A8%20Your%20Eligibility%20AI-00ffff?style=for-the-badge" /></p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vue.js&logoColor=4FC08D" />
+  <img src="https://img.shields.io/badge/Supabase-1C1C1C?style=for-the-badge&logo=supabase&logoColor=3ECF8E" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+</p>
+
+<p align="center">
   <strong>A benefits guidance tool powered by AI, built for the people who need it most.</strong>
 </p>
 
@@ -67,9 +74,7 @@ After the evaluation, the user is presented with a clear structural summary:
 
 Clarity features a robust, type-safe architecture separating a high-performance Vue 3 frontend from an Express RAG pipeline.
 
-
-```
-
+```bash
 .
 ├── backend/                # Express + TypeScript RAG pipeline (API)
 │   ├── api/                # Production endpoints (assess, health, protected indexer)
@@ -77,10 +82,48 @@ Clarity features a robust, type-safe architecture separating a high-performance 
 │   ├── data/benefits/      # Structured benefit schemas & eligibility guidelines
 │   └── setup.sql           # Supabase vector configurations & HNSW indexing
 └── frontend/               # Vue 3 + Vite SPA
-├── components/         # Modular form wizards, dynamic MoneyCards, and UI kits
-└── stores/             # Pinia state machines managing intake logic
-
+    ├── components/         # Modular form wizards, dynamic MoneyCards, and UI kits
+    └── stores/             # Pinia state machines managing intake logic
 ```
+
+## 🚀 Quick Start
+
+### Prerequisites
+* Node.js (v20+)
+* Supabase Account (with pgvector enabled)
+
+### Local Development Setup
+
+1. **Clone and Install Dependencies:**
+   ```bash
+   git clone https://github.com/codewithyash28/Clarity-AI.git
+   cd Clarity-AI
+   # Install dependencies for both backend and frontend
+   cd backend && npm install
+   cd ../frontend && npm install
+   ```
+
+2. **Environment Configuration:**
+   Create a `.env` file inside the `backend/` directory:
+   ```env
+   PORT=5000
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_anon_key
+   COHERE_API_KEY=your_cohere_key
+   CEREBRAS_API_KEY=your_cerebras_key
+   GROQ_API_KEY=your_groq_key
+   ```
+
+3. **Run the Application:**
+   ```bash
+   # In one terminal:
+   cd backend && npm run dev
+
+   # In another terminal:
+   cd frontend && npm run dev
+   ```
+
+---
 
 ### ⚙️ Production Technology Stack
 
@@ -119,6 +162,37 @@ graph TD
 4. **Deterministic Validation:** The AI's JSON output must cleanly map to a strict runtime **Zod schema** before delivery, completely mitigating UI breakages from structural drift or hallucinations.
 5. **Fail-Safe Integrity:** If any step in the pipeline hits an exception, the system gracefully serving one of three pre-verified regional profiles so the user never encounters a dead end.
 
+### 🛡️ Implementation Highlight: Resilient Multi-LLM Failover Engine
+
+Clarity ensures high availability by automatically failing over between Cerebras and Groq if the primary path encounters latency or API errors.
+
+```typescript
+export async function generateAssessment(
+  situationText: string,
+  chunks: BenefitChunk[]
+): Promise<AssessmentResult> {
+  // Primary Path: Cerebras (Ultra-Low Latency)
+  try {
+    const raw = await callLLM({
+      baseUrl: "https://api.cerebras.ai/v1",
+      model: "gpt-oss-120b",
+      // ... configuration
+    });
+    return parseAssessmentJSON(raw);
+  } catch (err) {
+    console.warn("Cerebras failed, initiating failover to Groq...");
+
+    // Automatic Fallback Path: Groq
+    const raw = await callLLM({
+      baseUrl: "https://api.groq.com/openai/v1",
+      model: "llama-3.3-70b-versatile",
+      // ... configuration
+    });
+    return parseAssessmentJSON(raw);
+  }
+}
+```
+
 ---
 
 ## ⚖️ Responsible AI & Compliance
@@ -148,16 +222,3 @@ graph TD
 <p align="center">
 <i>Clarity is not an AI automation tool. It is a benefits guidance tool, powered by AI. The difference matters.</i>
 </p>
-
-```
-
------
-
-### Why this updates the score to 1,000%:
-
-1.  **Visual Impact:** Instantly leverages clean markdown badges, scannable blockquotes, and professional data tables.
-2.  **Architecture Clarity:** Integrates a **Mermaid.js Flowchart** directly into the Markdown. GitHub renders this natively, visually explaining your RAG implementation to judges instantly.
-3.  **Structured Tech Stack:** Upgrades the tech list to a robust, three-column diagnostic database table layout.
-4.  **Production Polish:** Uses clean directory mapping conventions that emphasize clean structural design.
-
-```
