@@ -153,7 +153,6 @@ graph TD
     F --> G{Zod Schema Validation}
     G -- Pass --> H[Render UI MoneyCard]
     G -- Fail --> I[Graceful Fallback Path]
-
 ```
 
 1. **Context Extraction:** User responses are compiled into an explicit natural-language profile.
@@ -167,29 +166,36 @@ graph TD
 Clarity ensures high availability by automatically failing over between Cerebras and Groq if the primary path encounters latency or API errors.
 
 ```typescript
-export async function generateAssessment(
-  situationText: string,
-  chunks: BenefitChunk[]
-): Promise<AssessmentResult> {
-  // Primary Path: Cerebras (Ultra-Low Latency)
-  try {
-    const raw = await callLLM({
-      baseUrl: "https://api.cerebras.ai/v1",
-      model: "gpt-oss-120b",
-      // ... configuration
-    });
-    return parseAssessmentJSON(raw);
-  } catch (err) {
-    console.warn("Cerebras failed, initiating failover to Groq...");
-
-    // Automatic Fallback Path: Groq
-    const raw = await callLLM({
-      baseUrl: "https://api.groq.com/openai/v1",
-      model: "llama-3.3-70b-versatile",
-      // ... configuration
-    });
-    return parseAssessmentJSON(raw);
+export async function generateAssessment(situationText: string, chunks: BenefitChunk[]) {
+  // 1. Attempt Primary Path: Cerebras (Ultra-Low Latency)
+  if (process.env.CEREBRAS_API_KEY) {
+    try {
+      const raw = await callLLM({
+        baseUrl: "https://api.cerebras.ai/v1",
+        model: "gpt-oss-120b",
+        providerName: "Cerebras"
+      }, SYSTEM_PROMPT, buildUserPrompt(situationText, chunks));
+      return parseAssessmentJSON(raw);
+    } catch (err) {
+      console.error("Cerebras failed, initiating failover to Groq...");
+    }
   }
+
+  // 2. Fallback Path: Groq (High Reliability)
+  if (process.env.GROQ_API_KEY) {
+    try {
+      const raw = await callLLM({
+        baseUrl: "https://api.groq.com/openai/v1",
+        model: "llama-3.3-70b-versatile",
+        providerName: "Groq"
+      }, SYSTEM_PROMPT, buildUserPrompt(situationText, chunks));
+      return parseAssessmentJSON(raw);
+    } catch (err) {
+      console.error("Groq fallback also failed.");
+    }
+  }
+
+  throw new Error("All LLM providers failed");
 }
 ```
 

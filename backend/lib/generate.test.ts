@@ -55,6 +55,13 @@ describe('parseAssessmentJSON — valid input', () => {
     expect(result.benefits).toHaveLength(1)
   })
 
+  it('successfully extracts JSON from a preamble and postamble', () => {
+    const mixed = 'Here is the results: ' + JSON.stringify(VALID_RESPONSE) + ' I hope this helps!'
+    const result = parseAssessmentJSON(mixed)
+    expect(result.benefits).toHaveLength(1)
+    expect(result.total_monthly_estimate).toBe(675.56)
+  })
+
   it('defaults a missing confidence field to NEEDS_REVIEW', () => {
     const withMissingConfidence = {
       ...VALID_RESPONSE,

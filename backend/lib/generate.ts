@@ -8,10 +8,8 @@ import type { BenefitChunk } from "./retrieve.js";
 
 /** Milliseconds before an in-flight LLM request is aborted.
  *  Generous to accommodate cold starts on Cerebras free tier. */
-const LLM_REQUEST_TIMEOUT_MS = parseInt(
-  process.env.LLM_TIMEOUT_MS ?? "25000",
-  10
-);
+const rawTimeout = parseInt(process.env.LLM_TIMEOUT_MS || "25000", 10);
+const LLM_REQUEST_TIMEOUT_MS = isNaN(rawTimeout) || rawTimeout <= 0 ? 25000 : rawTimeout;
 
 /** Temperature of 0.1 = highly deterministic output.
  *  We need consistent JSON structure, not creative variation. */
@@ -20,9 +18,10 @@ const LLM_TEMPERATURE = 0.1;
 /**
  * Token budget for the full benefit assessment JSON.
  * 7 benefits x ~150 tokens each + JSON scaffolding ~ 1,200 tokens.
- * 1,500 provides comfortable headroom without runaway cost.
+ * 3,000 provides comfortable headroom without runaway cost.
  */
-const LLM_MAX_TOKENS = parseInt(process.env.LLM_MAX_TOKENS ?? "3000", 10);
+const rawMaxTokens = parseInt(process.env.LLM_MAX_TOKENS || "3000", 10);
+const LLM_MAX_TOKENS = isNaN(rawMaxTokens) || rawMaxTokens <= 0 ? 3000 : rawMaxTokens;
 
 // ─── Output types ────────────────────────────────────────────────────────────
 export interface BenefitResult {
@@ -230,14 +229,28 @@ async function callLLM(
 // where they are caught and trigger the demo fallback.
 export function parseAssessmentJSON(raw: string): AssessmentResult {
   // Strip any accidental markdown fences the LLM may have added
-  const cleaned = raw
+  let cleaned = raw
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i,     "")
     .replace(/```\s*$/i,     "")
     .trim();
 
   // Step 1: JSON parse — throws SyntaxError on malformed output
-  const parsed: unknown = JSON.parse(cleaned);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (err) {
+    // LLM sometimes adds a preamble ("Here is the JSON:") or postamble.
+    // Try to extract the first { ... } block we find.
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      cleaned = cleaned.substring(start, end + 1);
+      parsed = JSON.parse(cleaned);
+    } else {
+      throw err; // Re-throw if extraction also fails
+    }
+  }
 
   // Step 2: Schema validation — throws ZodError on wrong types or missing fields
   const validated = AssessmentOutputSchema.parse(parsed);

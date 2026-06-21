@@ -49,7 +49,8 @@ if (!process.env.CEREBRAS_API_KEY && !process.env.GROQ_API_KEY) {
 
 // ─── App setup ────────────────────────────────────────────────────────────────
 const app = express();
-const PORT = parseInt(process.env.PORT ?? "3001", 10);
+const rawPort = parseInt(process.env.PORT || "3001", 10);
+const PORT = isNaN(rawPort) || rawPort <= 0 ? 3001 : rawPort;
 
 // ── Trust proxy (CQ-009) ──────────────────────────────────────────────────────
 // Required for accurate IP extraction when the backend is behind a reverse

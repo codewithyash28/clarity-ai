@@ -1,7 +1,19 @@
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
+import { z } from "zod";
 import { embedPassages } from "./embed.js";
 import { getSupabase } from "./clients.js";
+
+// ─── Benefit file validation schema ──────────────────────────────────────────
+const BenefitFileSchema = z.object({
+  benefit_name: z.string().min(1),
+  gov_url:      z.string().url(),
+  last_updated: z.string().min(1),
+  chunks:       z.array(z.object({
+    chunk_type: z.string().min(1),
+    content:    z.string().min(1),
+  })).min(1),
+});
 
 // PROD-001: This file used to compute __dirname via
 // dirname(fileURLToPath(import.meta.url)) to locate data/benefits. That
@@ -27,9 +39,17 @@ export async function indexBenefitData(): Promise<IndexResult> {
   const allChunks: Array<{ benefit_name: string; chunk_type: string; content: string; source_url: string; last_updated: string; }> = [];
   for (const file of files) {
     const raw = readFileSync(join(BENEFITS_DIR, file), "utf-8");
-    const data = JSON.parse(raw) as BenefitFile;
+    const parsed = JSON.parse(raw);
+    const data = BenefitFileSchema.parse(parsed);
+
     for (const chunk of data.chunks) {
-      allChunks.push({ benefit_name: data.benefit_name, chunk_type: chunk.chunk_type, content: chunk.content, source_url: data.gov_url, last_updated: data.last_updated });
+      allChunks.push({
+        benefit_name: data.benefit_name,
+        chunk_type:   chunk.chunk_type,
+        content:      chunk.content,
+        source_url:   data.gov_url,
+        last_updated: data.last_updated
+      });
     }
   }
 
